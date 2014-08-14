@@ -1,0 +1,12 @@
+{
+    "finder": [
+    {
+        "name": ["*.php"],
+        "in": ["src", "vendor"]
+    }
+    ],
+    "main": "bin/commander.php",
+    "output": "bin/commander.phar",
+    "chmod": "0755",
+    "stub": true
+}
