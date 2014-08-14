@@ -4,8 +4,8 @@
 require __DIR__.'/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use Command\Printer;
+use Command\Library;
 
 $application = new Application();
-$application->add(new Printer());
+$application->add(new Library());
 $application->run();

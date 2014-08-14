@@ -4,7 +4,7 @@ require __DIR__.'/../vendor/autoload.php';
 
 use Symfony\Component\Finder\Finder;
 
-$phar = new \Phar(__DIR__.'/commander.phar');
+$phar = new \Phar(__DIR__.'/datatheke.phar');
 
 $finder = new Finder();
 $finder->files()
@@ -18,15 +18,15 @@ foreach ($finder as $file) {
 }
 
 // Remove Shebang line
-$content = file_get_contents(__DIR__.'/commander.php');
+$content = file_get_contents(__DIR__.'/datatheke.php');
 $content = preg_replace('{^#!/usr/bin/env php\s*}', '', $content);
-$phar->addFromString('bin/commander.php', $content);
+$phar->addFromString('bin/datatheke.php', $content);
 
 $phar->setStub('#!/usr/bin/env php
 <?php
 
-Phar::mapPhar("commander.phar");
-require "phar://commander.phar/bin/commander.php";
+Phar::mapPhar("datatheke.phar");
+require "phar://datatheke.phar/bin/datatheke.php";
 
 __HALT_COMPILER();
 ');

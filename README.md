@@ -1,9 +1,9 @@
-Commander.phar
-==============
+Datatheke-cli
+=============
 
 About
 -----
-Commander.phar is a little exemple to create a cli-command using Symfony/command and PHAR
+Datatheke-cli is a tool to interact with datatheke.com data.
 
 Build
 -----
@@ -16,4 +16,4 @@ box build # require box (http://box-project.org/)
 
 Use
 ---
-php bin/commander.phar
+./bin/datatheke

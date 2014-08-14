@@ -1,5 +1,5 @@
 {
-    "name": "iamluc/commander",
+    "name": "datatheke/datatheke-cli",
     "type": "library",
     "require": {
         "php": ">=5.3.3",

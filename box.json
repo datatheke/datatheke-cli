@@ -5,8 +5,8 @@
         "in": ["src", "vendor"]
     }
     ],
-    "main": "bin/commander.php",
-    "output": "bin/commander.phar",
+    "main": "bin/datatheke.php",
+    "output": "bin/datatheke",
     "chmod": "0755",
     "stub": true
 }
