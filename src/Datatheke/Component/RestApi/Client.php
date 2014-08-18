@@ -2,195 +2,178 @@
 
 namespace Datatheke\Component\RestApi;
 
-use Guzzle\Http\Client as GuzzleClient;
+use GuzzleHttp;
 
 class Client
 {
-    const URL_API = 'http://datatheke.local:8080/app_dev.php/api/v2';
-    // const URL_API = 'http://0.0.0.0/datatheke/app_dev.php/api/v2';
-    // const URL_API = 'https://www.datatheke.com/api/v2';
+    const DEFAULT_URL = 'https://www.datatheke.com/';
+    
+    /**
+     * Url
+     */
+    protected $url;
 
     /**
-     * Config
+     * Token
      */
-    protected $username;
-    protected $password;
-    protected $options;
+    protected $accessToken;
+    protected $refreshToken;
+    protected $expiresIn;
 
-    /**
-     * Guzzle\Http\Client
-     */
-    protected $client;
-
-    /**
-     * Access token
-     */
-    public $token;
-
-    public function __construct($username, $password, array $options = array())
+    public function __construct($accessToken, $refreshToken = null, $expiresIn = null, $url = null)
     {
-        $this->username = $username;
-        $this->password = $password;
-        $this->options  = $options;
+        $this->accessToken = $accessToken;
+        $this->refreshToken = $refreshToken;
+        $this->expiresIn = $expiresIn;
+        $this->url = ($url ?: self::DEFAULT_URL).'api/v2/';
     }
 
-    public static function createWithToken($token)
+    public static function createFromUserCredentials($username, $password, $url = null)
     {
-        $client = new self('', '');
-        $client->token = $token;
+        $response = GuzzleHttp\post(($url ?: self::DEFAULT_URL).'api/v2/token', [
+            'body' => [
+                'grant_type' => 'password',
+                'username' => $username,
+                'password' => $password
+            ]
+        ]);
+        
+        $token = $response->json();
+        
+        return new self($token['access_token'], $token['refresh_token'], $token['expires_in'], $url);
+    }
 
-        $client->getClient(false)
-            ->setDefaultHeaders(array(
-                'Authorization' => 'Bearer '.$token,
-                'Content-type'  => 'application/json'
-            ))
-        ;
+    public function getToken()
+    {
+        return [
+            'access_token' => $this->accessToken,
+            'refresh_token' => $this->refreshToken,
+            'expires_in' => $this->expiresIn
+        ];
+    }
 
+    protected function getClient()
+    {
+        static $client;
+        
+        if (!$client) {
+            $client = new GuzzleHttp\Client([
+                'base_url' => $this->url,
+                'defaults' => [
+                    'verify' => false,
+                    'headers' => [
+                        'Authorization' => 'Bearer '.$this->accessToken,
+                        // 'Content-type'  => 'application/json'
+                    ]
+                ]
+            ]);            
+        }
+        
         return $client;
-    }
-
-    protected function getClient($connected = true)
-    {
-        if (!$this->client) {
-            $this->client = new GuzzleClient(self::URL_API, $this->options);
-            $this->client->setDefaultOption('verify', false);
-        }
-
-        if ($connected && !$this->isConnected()) {
-            $this->connect();
-        }
-
-        return $this->client;
-    }
-
-    public function isConnected()
-    {
-        return null !== $this->token;
-    }
-
-    public function connect()
-    {
-        $client = $this->getClient(false);
-
-        $client->setDefaultHeaders(array());
-        $response = $client->post('token')->setAuth($this->username, $this->password)->send();
-        $content  = json_decode((string) $response->getBody(), true);
-        $this->token = $content['token'];
-        $client->setDefaultHeaders(array(
-            'Authorization' => 'Bearer '.$this->token,
-            'Content-type'  => 'application/json'
-            )
-        );
-
-        return $this;
     }
 
     public function getLibraries($page = 1)
     {
-        // try {
-            $response = $this->getClient()->get('libraries?page='.(int) $page)->send();
-        // } catch (\Exception $e) {
-            // echo 'la '.$response->getBody();exit;
-            // return;
-        // }
-        return json_decode((string) $response->getBody(), true);
+        $response = $this->getClient()->get('library?page='.(int) $page);
+
+        return $response->json();
     }
 
     public function getLibrary($id)
     {
-        $response = $this->getClient()->get(array('library/{id}', array('id' => $id)))->send();
+        $response = $this->getClient()->get(array('library/{id}', array('id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
-    public function getLibraryCollections($id, $page = null)
+    public function getLibraryCollections($id, $page = 1)
     {
-        $response = $this->getClient()->get(array('library/{id}/collections?page='.(int) $page, array('id' => $id)))->send();
+        $response = $this->getClient()->get(array('library/{id}/collection?page='.(int) $page, array('id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function getCollection($id)
     {
-        $response = $this->getClient()->get(array('collection/{id}', array('id' => $id)))->send();
+        $response = $this->getClient()->get(array('collection/{id}', array('id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
-    public function getCollectionItems($id, $page = null)
+    public function getCollectionItems($id, $page = 1)
     {
-        $response = $this->getClient()->get(array('collection/{id}/items?page='.(int) $page, array('id' => $id)))->send();
+        $response = $this->getClient()->get(array('collection/{id}/item?page='.(int) $page, array('id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function getItem($collectionId, $id)
     {
-        $response = $this->getClient()->get(array('collection/{collectionId}/item/{id}', array('collectionId' => $collectionId, 'id' => $id)))->send();
+        $response = $this->getClient()->get(array('collection/{collectionId}/item/{id}', array('collectionId' => $collectionId, 'id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function createLibrary($library)
     {
-        $response = $this->getClient()->post('library', null, json_encode(array('library' => $library)))->send();
+        $response = $this->getClient()->post('library', null, json_encode(array('library' => $library)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function createCollection($libraryId, $collection)
     {
-        $response = $this->getClient()->post(array('library/{id}', array('id' => $libraryId)), null, json_encode(array('collection' => $collection)))->send();
+        $response = $this->getClient()->post(array('library/{id}', array('id' => $libraryId)), null, json_encode(array('collection' => $collection)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function createItem($collectionId, $item)
     {
-        $response = $this->getClient()->post(array('collection/{id}', array('id' => $collectionId)), null, json_encode(array('_'.$collectionId => $item)))->send();
+        $response = $this->getClient()->post(array('collection/{id}', array('id' => $collectionId)), null, json_encode(array('_'.$collectionId => $item)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function updateLibrary($libraryId, $library)
     {
-        $response = $this->getClient()->put(array('library/{id}', array('id' => $libraryId)), null, json_encode(array('library' => $library)))->send();
+        $response = $this->getClient()->put(array('library/{id}', array('id' => $libraryId)), null, json_encode(array('library' => $library)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function updateCollection($collectionId, $collection)
     {
-        $response = $this->getClient()->put(array('collection/{id}', array('id' => $collectionId)), null, json_encode(array('collection' => $collection)))->send();
+        $response = $this->getClient()->put(array('collection/{id}', array('id' => $collectionId)), null, json_encode(array('collection' => $collection)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function updateItem($collectionId, $itemId, $item)
     {
-        $response = $this->getClient()->put(array('collection/{collectionId}/item/{id}', array('collectionId' => $collectionId, 'id' => $itemId)), null, json_encode(array('_'.$collectionId => $item)))->send();
+        $response = $this->getClient()->put(array('collection/{collectionId}/item/{id}', array('collectionId' => $collectionId, 'id' => $itemId)), null, json_encode(array('_'.$collectionId => $item)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function deleteLibrary($id)
     {
-        $response = $this->getClient()->delete(array('library/{id}', array('id' => $id)))->send();
+        $response = $this->getClient()->delete(array('library/{id}', array('id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function deleteCollection($id)
     {
-        $response = $this->getClient()->delete(array('collection/{id}', array('id' => $id)))->send();
+        $response = $this->getClient()->delete(array('collection/{id}', array('id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 
     public function deleteItem($collectionId, $id)
     {
-        $response = $this->getClient()->delete(array('collection/{collectionId}/item/{id}', array('collectionId' => $collectionId, 'id' => $id)))->send();
+        $response = $this->getClient()->delete(array('collection/{collectionId}/item/{id}', array('collectionId' => $collectionId, 'id' => $id)));
 
-        return json_decode((string) $response->getBody(), true);
+        return $response->json();
     }
 }

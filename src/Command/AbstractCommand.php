@@ -13,12 +13,18 @@ use Datatheke\Component\RestApi\Client;
 abstract class AbstractCommand extends Command
 {
     protected $configFile;
+    protected $url;
 
-    public function __construct($name = null)
+    public function __construct($name = null, $url = null)
     {
         parent::__construct($name);
 
         $this->configFile = getenv('HOME').'/.datatheke';
+
+        // http://datatheke.local:8080/app_dev.php/
+        // http://0.0.0.0/datatheke/app_dev.php/
+        // https://www.datatheke.com/
+        $this->url = 'http://0.0.0.0/datatheke/app_dev.php/';
     }
 
     protected function getClient(InputInterface $input, OutputInterface $output)
@@ -30,7 +36,7 @@ abstract class AbstractCommand extends Command
         }
 
         if ($token = $this->readToken()) {
-            $client = Client::createWithToken($token);
+            $client = new Client($token['access_token'], $token['refresh_token'], $token['expires_in'], $this->url);
         } else {
             $helper = $this->getHelper('question');
 
@@ -42,10 +48,9 @@ abstract class AbstractCommand extends Command
             $question->setHiddenFallback(false);
             $password = $helper->ask($input, $output, $question);
 
-            $client = new Client($username, $password);
-            $client->connect();
+            $client = Client::createFromUserCredentials($username, $password, $this->url);
 
-            $this->storeToken($client->token);
+            $this->storeToken($client->getToken());
         }
 
         return $client;
@@ -57,12 +62,12 @@ abstract class AbstractCommand extends Command
             return;
         }
 
-        return file_get_contents($this->configFile);
+        return json_decode(file_get_contents($this->configFile), true);
     }
 
     private function storeToken($token)
     {
-        file_put_contents($this->configFile, $token);
+        file_put_contents($this->configFile, json_encode($token));
         chmod($this->configFile, 0600);
     }
 }
