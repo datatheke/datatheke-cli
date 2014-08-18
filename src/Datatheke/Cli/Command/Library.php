@@ -1,6 +1,6 @@
 <?php
 
-namespace Command;
+namespace Datatheke\Cli\Command;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

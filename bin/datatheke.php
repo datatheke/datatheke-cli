@@ -4,7 +4,7 @@
 require __DIR__.'/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use Command\Library;
+use Datatheke\Cli\Command\Library;
 
 $application = new Application();
 $application->add(new Library());
