@@ -8,9 +8,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
 
+use Symfony\Component\Yaml\Yaml;
+// use Symfony\Component\Yaml\Exception\ParseException;
+// use Symfony\Component\Yaml\Exception\DumpException;
+
 use Datatheke\Component\RestApi\Client;
 
-abstract class AbstractCommand extends Command
+abstract class AbstractBaseCommand extends Command
 {
     protected $configFile;
     protected $url;
@@ -21,10 +25,10 @@ abstract class AbstractCommand extends Command
 
         $this->configFile = getenv('HOME').'/.datatheke';
 
-        // http://datatheke.local:8080/app_dev.php/
-        // http://0.0.0.0/datatheke/app_dev.php/
-        // https://www.datatheke.com/
-        $this->url = 'http://0.0.0.0/datatheke/app_dev.php/';
+        // $this->url = $url;
+        // $this->url = 'http://datatheke.local:8080/app_dev.php/';
+        // $this->url = 'http://0.0.0.0/datatheke/app_dev.php/';
+        $this->url = 'https://www.datatheke.com/';
     }
 
     protected function getClient(InputInterface $input, OutputInterface $output)
@@ -62,12 +66,12 @@ abstract class AbstractCommand extends Command
             return;
         }
 
-        return json_decode(file_get_contents($this->configFile), true);
+        return Yaml::parse(file_get_contents($this->configFile));
     }
 
     private function storeToken($token)
     {
-        file_put_contents($this->configFile, json_encode($token));
+        file_put_contents($this->configFile, Yaml::dump($token));
         chmod($this->configFile, 0600);
     }
 }

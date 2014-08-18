@@ -7,11 +7,16 @@ use GuzzleHttp;
 class Client
 {
     const DEFAULT_URL = 'https://www.datatheke.com/';
-    
+
     /**
-     * Url
+     * Url of the datatheke instance (including trailing slash)
      */
     protected $url;
+
+    /**
+     * Extra config for Guzzle client (proxy, ssl certificate, ...)
+     */
+    protected $config;
 
     /**
      * Token
@@ -20,27 +25,29 @@ class Client
     protected $refreshToken;
     protected $expiresIn;
 
-    public function __construct($accessToken, $refreshToken = null, $expiresIn = null, $url = null)
+    public function __construct($accessToken, $refreshToken = null, $expiresIn = null, $url = null, array $config = [])
     {
         $this->accessToken = $accessToken;
         $this->refreshToken = $refreshToken;
         $this->expiresIn = $expiresIn;
+
         $this->url = ($url ?: self::DEFAULT_URL).'api/v2/';
+        $this->config = $config;
     }
 
-    public static function createFromUserCredentials($username, $password, $url = null)
+    public static function createFromUserCredentials($username, $password, $url = null, array $config = [])
     {
-        $response = GuzzleHttp\post(($url ?: self::DEFAULT_URL).'api/v2/token', [
+        $options = array_merge(['verify' => false], $config, [
             'body' => [
                 'grant_type' => 'password',
                 'username' => $username,
                 'password' => $password
             ]
         ]);
-        
-        $token = $response->json();
-        
-        return new self($token['access_token'], $token['refresh_token'], $token['expires_in'], $url);
+
+        $token = GuzzleHttp\post(($url ?: self::DEFAULT_URL).'api/v2/token', $options)->json();
+
+        return new self($token['access_token'], $token['refresh_token'], $token['expires_in'], $url, $config);
     }
 
     public function getToken()
@@ -55,20 +62,21 @@ class Client
     protected function getClient()
     {
         static $client;
-        
+
         if (!$client) {
+            $defaults = array_merge(['verify' => false], $this->config, [
+                'headers' => [
+                    'Authorization' => 'Bearer '.$this->accessToken,
+                    // 'Content-type'  => 'application/json'
+                ]
+            ]);
+
             $client = new GuzzleHttp\Client([
                 'base_url' => $this->url,
-                'defaults' => [
-                    'verify' => false,
-                    'headers' => [
-                        'Authorization' => 'Bearer '.$this->accessToken,
-                        // 'Content-type'  => 'application/json'
-                    ]
-                ]
-            ]);            
+                'defaults' => $defaults
+            ]);
         }
-        
+
         return $client;
     }
 
