@@ -9,11 +9,9 @@ Build
 -----
 ```sh
 composer install
-php bin/compile.php
-# or
 box build # require box (http://box-project.org/)
 ```
 
 Use
 ---
-./bin/datatheke
+./bin/datatheke.phar

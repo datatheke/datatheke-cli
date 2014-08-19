@@ -6,12 +6,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Library extends AbstractBaseCommand
+class LibraryCommand extends AbstractBaseCommand
 {
     protected function configure()
     {
         $this
             ->setName('library')
+            ->setDescription('Interact with libraries')
             ->addArgument(
                 'library',
                 InputArgument::OPTIONAL,

@@ -1,6 +1,6 @@
 <?php
 
-namespace Datatheke\Component\RestApi;
+namespace Datatheke\Component\Api;
 
 use GuzzleHttp;
 
@@ -23,13 +23,13 @@ class Client
      */
     protected $accessToken;
     protected $refreshToken;
-    protected $expiresIn;
+    protected $expiresAt;
 
-    public function __construct($accessToken, $refreshToken = null, $expiresIn = null, $url = null, array $config = [])
+    public function __construct($accessToken, $refreshToken = null, $expiresAt = null, $url = null, array $config = [])
     {
         $this->accessToken = $accessToken;
         $this->refreshToken = $refreshToken;
-        $this->expiresIn = $expiresIn;
+        $this->expiresAt = $expiresAt;
 
         $this->url = ($url ?: self::DEFAULT_URL).'api/v2/';
         $this->config = $config;
@@ -46,8 +46,9 @@ class Client
         ]);
 
         $token = GuzzleHttp\post(($url ?: self::DEFAULT_URL).'api/v2/token', $options)->json();
+        $expiresAt = strtotime(sprintf('+%d seconds', $token['expires_in']));
 
-        return new self($token['access_token'], $token['refresh_token'], $token['expires_in'], $url, $config);
+        return new self($token['access_token'], $token['refresh_token'], $expiresAt, $url, $config);
     }
 
     public function getToken()
@@ -55,7 +56,7 @@ class Client
         return [
             'access_token' => $this->accessToken,
             'refresh_token' => $this->refreshToken,
-            'expires_in' => $this->expiresIn
+            'expires_at' => $this->expiresAt
         ];
     }
 
