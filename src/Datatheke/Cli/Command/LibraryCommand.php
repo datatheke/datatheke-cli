@@ -35,7 +35,7 @@ class LibraryCommand extends AbstractBaseCommand
         $libraries = $this->getClient($input, $output)->getLibraries();
 
         foreach ($libraries['items'] as $library) {
-            $output->writeln(sprintf('[%s] %s', $library['id'], $library['name']));
+            $output->writeln(sprintf('<info>[%s]</info> %s', $library['id'], $library['name']));
         }
     }
 
@@ -44,7 +44,7 @@ class LibraryCommand extends AbstractBaseCommand
         $collections = $this->getClient($input, $output)->getLibraryCollections($library);
 
         foreach ($collections['items'] as $collection) {
-            $output->writeln(sprintf('[%s] %s', $collection['id'], $collection['name']));
+            $output->writeln(sprintf('<info>[%s]</info> %s', $collection['id'], $collection['name']));
         }
     }
 }

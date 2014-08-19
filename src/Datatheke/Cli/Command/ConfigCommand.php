@@ -14,11 +14,30 @@ class ConfigCommand extends AbstractBaseCommand
         $this
             ->setName('config')
             ->setDescription('Get and set configuration')
+            ->addArgument(
+                'option',
+                InputArgument::OPTIONAL,
+                'The name of the option'
+            )
+            ->addArgument(
+                'value',
+                InputArgument::OPTIONAL,
+                'The value of the option'
+            )
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln(Yaml::dump($this->config->getConfig()));
+        $option = $input->getArgument('option');
+        $value = $input->getArgument('value');
+
+        if (!$option && !$value) {
+            $output->writeln(Yaml::dump($this->config->getConfig()));
+
+            return;
+        }
+
+        $output->writeln('yahoo !');
     }
 }
