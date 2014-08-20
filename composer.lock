@@ -4,20 +4,20 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "10dbccf67b9fde43f6eb7e50522f9866",
+    "hash": "465807a3159f09dc2094ea08014b8d29",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
-            "version": "4.2.0",
+            "version": "4.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "cc79aa76054e3e5e45dfd87f7b0f61f54b3a759d"
+                "reference": "47ca212e985d962b3cbd67675eec54bb72d66062"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/cc79aa76054e3e5e45dfd87f7b0f61f54b3a759d",
-                "reference": "cc79aa76054e3e5e45dfd87f7b0f61f54b3a759d",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/47ca212e985d962b3cbd67675eec54bb72d66062",
+                "reference": "47ca212e985d962b3cbd67675eec54bb72d66062",
                 "shasum": ""
             },
             "require": {
@@ -69,7 +69,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2014-08-18 00:48:35"
+            "time": "2014-08-20 05:30:12"
         },
         {
             "name": "guzzlehttp/streams",
@@ -178,6 +178,64 @@
             "description": "Symfony Console Component",
             "homepage": "http://symfony.com",
             "time": "2014-08-05 09:00:40"
+        },
+        {
+            "name": "symfony/property-access",
+            "version": "v2.5.3",
+            "target-dir": "Symfony/Component/PropertyAccess",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/PropertyAccess.git",
+                "reference": "4a4376295635e3b0d5f6bf2025810a6b69791d6e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/PropertyAccess/zipball/4a4376295635e3b0d5f6bf2025810a6b69791d6e",
+                "reference": "4a4376295635e3b0d5f6bf2025810a6b69791d6e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.5-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Symfony\\Component\\PropertyAccess\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Symfony Community",
+                    "homepage": "http://symfony.com/contributors"
+                },
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                }
+            ],
+            "description": "Symfony PropertyAccess Component",
+            "homepage": "http://symfony.com",
+            "keywords": [
+                "access",
+                "array",
+                "extraction",
+                "index",
+                "injection",
+                "object",
+                "property",
+                "property path",
+                "reflection"
+            ],
+            "time": "2014-08-06 06:44:37"
         },
         {
             "name": "symfony/yaml",

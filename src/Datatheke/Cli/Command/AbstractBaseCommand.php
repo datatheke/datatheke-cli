@@ -19,7 +19,7 @@ abstract class AbstractBaseCommand extends Command
         parent::__construct($name);
 
         $configFile = getenv('HOME').'/.datatheke';
-        $this->config = new Config($configFile);
+        $this->config = Config::getInstance($configFile);
     }
 
     protected function getClient(InputInterface $input, OutputInterface $output)
@@ -30,8 +30,8 @@ abstract class AbstractBaseCommand extends Command
             return $client;
         }
 
-        $url = $this->config->getUrl();
-        $token = $this->config->getToken();
+        $url = $this->config->get('url');
+        $token = $this->config->get('token');
 
         if ($token) {
             $client = new Client($token['access_token'], $token['refresh_token'], $token['expires_at'], $url);
@@ -48,7 +48,7 @@ abstract class AbstractBaseCommand extends Command
 
             $client = Client::createFromUserCredentials($username, $password, $url);
 
-            $this->config->setToken($client->getToken());
+            $this->config->set('token', $client->getToken());
         }
 
         return $client;

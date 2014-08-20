@@ -38,6 +38,6 @@ class ConfigCommand extends AbstractBaseCommand
             return;
         }
 
-        $output->writeln('yahoo !');
+        $this->config->set($option, $value);
     }
 }

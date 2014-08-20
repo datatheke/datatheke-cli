@@ -2,22 +2,35 @@
 
 namespace Datatheke\Cli;
 
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Yaml\Yaml;
 
 class Config
 {
     protected $path;
     protected $config;
+    protected $accessor;
 
     public function __construct($path)
     {
         $this->path = $path;
         $this->config = $this->readConfig($this->path);
+        $this->accessor = PropertyAccess::createPropertyAccessor();
     }
 
-    public function __destruct()
+    public static function getInstance($path)
     {
-        $this->writeConfig($this->path, $this->config);
+        static $instances;
+
+        if (null === $instances) {
+            $instances = array();
+        }
+
+        if (!isset($instances[$path])) {
+            $instances[$path] = new self($path);
+        }
+
+        return $instances[$path];
     }
 
     public function getConfig()
@@ -25,36 +38,24 @@ class Config
         return $this->config;
     }
 
-    public function getToken()
+    public function set($property, $value)
     {
-        if (isset($this->config['token'])) {
-            return $this->config['token'];
-        }
+        $this->accessor->setValue($this->config, $this->toArrayProperty($property), $value);
 
-        return null;
+        return $this;
     }
 
-    public function setToken($token)
+    public function get($property)
     {
-        $this->config['token'] = $token;
+        return $this->accessor->getValue($this->config, $this->toArrayProperty($property));
     }
 
-    public function getUrl()
+    private function toArrayProperty($property)
     {
-        // return 'http://datatheke.local:8080/app_dev.php/';
-        // return 'http://0.0.0.0/datatheke/app_dev.php/';
-        // return 'https://www.datatheke.com/';
+        $paths = explode('.', $property);
+        array_walk($paths, function (&$item, $key) { $item = '['.$item.']'; });
 
-        if (isset($this->config['http']['url'])) {
-            return $this->config['http']['url'];
-        }
-
-        return null;
-    }
-
-    public function setUrl($url)
-    {
-        $this->config['http']['url'] = $url;
+        return implode('', $paths);
     }
 
     private function readConfig($path)
@@ -70,5 +71,10 @@ class Config
     {
         file_put_contents($path, Yaml::dump($config));
         chmod($path, 0600);
+    }
+
+    public function __destruct()
+    {
+        $this->writeConfig($this->path, $this->config);
     }
 }
