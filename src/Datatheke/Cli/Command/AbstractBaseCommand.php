@@ -30,7 +30,7 @@ abstract class AbstractBaseCommand extends Command
             return $client;
         }
 
-        $url = $this->config->get('url');
+        $url = $this->config->get('http.url');
         $token = $this->config->get('token');
 
         if ($token) {
