@@ -6,13 +6,24 @@ use GuzzleHttp\Event\BeforeEvent;
 use GuzzleHttp\Event\ErrorEvent;
 use GuzzleHttp\Event\RequestEvents;
 use GuzzleHttp\Event\SubscriberInterface;
-use GuzzleHttp\Message\RequestInterface;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Subscriber\Oauth\GrantType\GrantTypeInterface;
 
 class Oauth2 implements SubscriberInterface
 {
+    /**
+     * AccessToken
+     */
     private $accessToken;
+
+    /**
+     * GrantTypeInterface
+     */
     private $grantType;
+
+    /**
+     * GrantTypeInterface
+     */
     private $refreshType;
 
     public function __construct(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshType = null)
@@ -34,34 +45,39 @@ class Oauth2 implements SubscriberInterface
         $request = $event->getRequest();
 
         // Only sign requests using "auth"="oauth2"
-        if ($request->getConfig()->get('auth') != 'oauth2') {
+        if ('oauth2' !== $request->getConfig()->get('auth')) {
             return;
         }
 
-        $token = $this->requestAccessToken();
-        $header = $this->getAuthorizationHeader($token);
-
-        $request->setHeader('Authorization', $header);
+        $this->requestAccessToken();
+        $request->setHeader('Authorization', sprintf('Bearer %s', $this->accessToken->getAccessToken()));
     }
 
     public function onError(ErrorEvent $event)
     {
-echo "ERROR\n";
-echo $event->getResponse()->getStatusCode()."\n";
-echo $event->getResponse()->getBody()."\n";
+        $request = $event->getRequest();
+        $response = $event->getResponse();
 
-        if (401 == $event->getResponse()->getStatusCode()) {
-            $request = $event->getRequest();
-            if (!$request->getConfig()->get('retried')) {
-                if ($this->acquireAccessToken()) {
-                    $request->getConfig()->set('retried', true);
-                    $this->setHeader($request);
-                    $event->intercept($event->getClient()->send($request));
-                }
-            }
+        if ('oauth2' !== $request->getConfig()->get('auth')) {
+            return;
         }
+
+        if (401 != $event->getResponse()->getStatusCode()) {
+            return;
+        }
+
+        if ($request->getConfig()->get('retried')) {
+            return;
+        }
+
+        $this->requestAccessToken(true);
+        $request->getConfig()->set('retried', true);
+        $event->intercept($event->getClient()->send($request));
     }
 
+    /**
+     * Get AccessToken
+     */
     public function getAccessToken()
     {
         return $this->accessToken;
@@ -78,64 +94,42 @@ echo $event->getResponse()->getBody()."\n";
     }
 
     /**
-     * Get access token
+     * Request access token
      *
      * @return AccessToken Oauth2 access token
      */
-    public function requestAccessToken()
+    protected function requestAccessToken($forceRefresh = false)
     {
         if (null === $this->accessToken) {
             $this->acquireAccessToken();
-        } elseif ($this->accessToken->hasExpired()) {
+        } elseif ($this->accessToken->hasExpired() || $forceRefresh) {
             try {
                 $this->refreshToken();
-            } catch (\Exception $e) {
-                echo "==============\n";
-                echo "refreshToken failed, try acquireAccessToken()\n";
-                echo "==============\n";
+            } catch (ClientException $e) {
+                if (400 != $e->getResponse()->getStatusCode()) {
+                    throw $e;
+                }
 
                 $this->acquireAccessToken();
             }
         }
-
-        return $this->accessToken;
     }
 
-    private function setHeader(RequestInterface $request)
+    protected function acquireAccessToken()
     {
-        $token = $this->getAccessToken();
-        $header = $this->getAuthorizationHeader($token);
-        $request->setHeader('Authorization', $header);
-    }
-
-    private function getAuthorizationHeader(AccessToken $token)
-    {
-        return sprintf('Bearer %s', $token->getAccessToken());
-    }
-
-    private function acquireAccessToken()
-    {
-        echo "==============\n";
-        echo "acquireAccessToken()\n";
-        echo "==============\n";
-
-        if ($this->grantType) {
-            $this->accessToken = $this->grantType->getAccessToken($this->accessToken);
+        if (null === $this->grantType) {
+            throw new \Exception('Unable to request AccessToken without setting grantType in constructor');
         }
 
-        return $this->accessToken;
+        $this->accessToken = $this->grantType->getAccessToken($this->accessToken);
     }
 
-    private function refreshToken()
+    protected function refreshToken()
     {
-        echo "==============\n";
-        echo "refreshToken()\n";
-        echo "==============\n";
-
-        if ($this->refreshType) {
-            $this->accessToken = $this->refreshType->getAccessToken($this->accessToken);
+        if (null === $this->refreshType) {
+            throw new \Exception('Unable to refresh AccessToken without setting refreshType in constructor');
         }
 
-        return $this->accessToken;
+        $this->accessToken = $this->refreshType->getAccessToken($this->accessToken);
     }
 }

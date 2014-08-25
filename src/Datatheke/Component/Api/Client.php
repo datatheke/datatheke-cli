@@ -51,7 +51,7 @@ class Client
         $this->setConfig([]);
     }
 
-    public function setTokenData($accessToken = null, $refreshToken = null, $expiresAt = null)
+    public function setTokenData($accessToken, $refreshToken, $expiresAt)
     {
         $this->accessToken = $accessToken;
         $this->refreshToken = $refreshToken;
@@ -71,7 +71,7 @@ class Client
     public function setCredentials($credentials)
     {
         if (!is_array($credentials) && !is_callable($credentials)) {
-            throw new \Exception('credentials must be an an array or callable');
+            throw new \Exception('Credentials must be an an array or callable');
         }
 
         $this->credentials = $credentials;
