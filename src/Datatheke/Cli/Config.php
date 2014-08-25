@@ -8,17 +8,20 @@ use Symfony\Component\Yaml\Yaml;
 class Config
 {
     protected $path;
+    protected $autoSave;
     protected $config;
     protected $accessor;
 
-    public function __construct($path)
+    public function __construct($path, $autoSave = true)
     {
         $this->path = $path;
+        $this->autoSave = $autoSave;
+
         $this->config = $this->readConfig($this->path);
         $this->accessor = PropertyAccess::createPropertyAccessor();
     }
 
-    public static function getInstance($path)
+    public static function getInstance($path, $autoSave = true)
     {
         static $instances;
 
@@ -27,7 +30,7 @@ class Config
         }
 
         if (!isset($instances[$path])) {
-            $instances[$path] = new self($path);
+            $instances[$path] = new self($path, $autoSave);
         }
 
         return $instances[$path];
@@ -75,6 +78,8 @@ class Config
 
     public function __destruct()
     {
-        $this->writeConfig($this->path, $this->config);
+        if ($this->autoSave) {
+            $this->writeConfig($this->path, $this->config);
+        }
     }
 }

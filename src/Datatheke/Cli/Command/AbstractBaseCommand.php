@@ -7,37 +7,29 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
 
+use Pimple\Container;
+
 use Datatheke\Component\Api\Client;
-use Datatheke\Cli\Config;
+use Datatheke\Cli\ContainerAwareInterface;
 
-abstract class AbstractBaseCommand extends Command
+abstract class AbstractBaseCommand extends Command implements ContainerAwareInterface
 {
-    protected $config;
+    protected $container;
+    protected $client;
 
-    public function __construct($name = null)
+    public function setContainer(Container $container)
     {
-        parent::__construct($name);
-
-        $configFile = getenv('HOME').'/.datatheke';
-        $this->config = Config::getInstance($configFile);
+        $this->container = $container;
     }
 
     protected function getClient(InputInterface $input, OutputInterface $output)
     {
-        static $client;
-
-        if ($client) {
-            return $client;
+        if ($this->client) {
+            return $this->client;
         }
 
-        $url = $this->config->get('http.url');
-        $token = $this->config->get('token');
-
-        if ($token) {
-            $client = new Client($token['access_token'], $token['refresh_token'], $token['expires_at'], $url);
-        } else {
-            $helper = $this->getHelper('question');
-
+        $helper = $this->getHelper('question');
+        $setCredentials = function () use ($input, $output, $helper) {
             $question = new Question('Username: ');
             $username = $helper->ask($input, $output, $question);
 
@@ -46,11 +38,31 @@ abstract class AbstractBaseCommand extends Command
             $question->setHiddenFallback(false);
             $password = $helper->ask($input, $output, $question);
 
-            $client = Client::createFromUserCredentials($username, $password, $url);
+            return [$username, $password];
+        };
 
-            $this->config->set('token', $client->getToken());
+        $this->client = new Client();
+        $this->client->setCredentials($setCredentials);
+
+        if ($token = $this->container['config']->get('token')) {
+            $this->client->setTokenData($token['access_token'], $token['refresh_token'], $token['expires_at']);
         }
 
-        return $client;
+        if ($url = $this->container['config']->get('http.url')) {
+            $this->client->setUrl($url);
+        }
+
+        if ($url = $this->container['config']->get('http.config')) {
+            $this->client->setConfig($config);
+        }
+
+        return $this->client;
+    }
+
+    public function __destruct()
+    {
+        if (null !== $this->client) {
+            $this->container['config']->set('token', $this->client->getLastToken());
+        }
     }
 }

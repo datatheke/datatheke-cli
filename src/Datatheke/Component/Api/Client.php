@@ -3,10 +3,24 @@
 namespace Datatheke\Component\Api;
 
 use GuzzleHttp;
+use GuzzleHttp\Subscriber\Oauth\Oauth2;
+use GuzzleHttp\Subscriber\Oauth\AccessToken;
+use GuzzleHttp\Subscriber\Oauth\GrantType\Password;
+use GuzzleHttp\Subscriber\Oauth\GrantType\Refresh;
 
 class Client
 {
     const DEFAULT_URL = 'https://www.datatheke.com/';
+
+    /**
+     * GuzzleHttp\Client
+     */
+    protected $client;
+
+    /**
+     * GuzzleHttp\Subscriber\Oauth\Oauth2
+     */
+    protected $oauth2;
 
     /**
      * Url of the datatheke instance (including trailing slash)
@@ -19,64 +33,93 @@ class Client
     protected $config;
 
     /**
-     * Token
+     * An array with username and password, or a callback wich returns username and password
+     */
+    protected $credentials;
+
+    /**
+     * Token data
      */
     protected $accessToken;
     protected $refreshToken;
     protected $expiresAt;
 
-    public function __construct($accessToken, $refreshToken = null, $expiresAt = null, $url = null, array $config = [])
+    public function __construct($accessToken = null, $refreshToken = null, $expiresAt = null)
+    {
+        $this->setTokenData($accessToken, $refreshToken, $expiresAt);
+        $this->setUrl(self::DEFAULT_URL);
+        $this->setConfig([]);
+    }
+
+    public function setTokenData($accessToken = null, $refreshToken = null, $expiresAt = null)
     {
         $this->accessToken = $accessToken;
         $this->refreshToken = $refreshToken;
         $this->expiresAt = $expiresAt;
+    }
 
-        $this->url = ($url ?: self::DEFAULT_URL).'api/v2/';
+    public function setUrl($url)
+    {
+        $this->url = $url.'api/v2/';
+    }
+
+    public function setConfig(array $config)
+    {
         $this->config = $config;
     }
 
-    public static function createFromUserCredentials($username, $password, $url = null, array $config = [])
+    public function setCredentials($credentials)
     {
-        $options = array_merge(['verify' => false], $config, [
-            'body' => [
-                'grant_type' => 'password',
-                'username' => $username,
-                'password' => $password
-            ]
-        ]);
+        if (!is_array($credentials) && !is_callable($credentials)) {
+            throw new \Exception('credentials must be an an array or callable');
+        }
 
-        $token = GuzzleHttp\post(($url ?: self::DEFAULT_URL).'api/v2/token', $options)->json();
-        $expiresAt = strtotime(sprintf('+%d seconds', $token['expires_in']));
+        $this->credentials = $credentials;
 
-        return new self($token['access_token'], $token['refresh_token'], $expiresAt, $url, $config);
+        return $this;
     }
 
-    public function getToken()
+    public function getLastToken()
     {
-        return [
-            'access_token' => $this->accessToken,
-            'refresh_token' => $this->refreshToken,
-            'expires_at' => $this->expiresAt
-        ];
+        if (null === $this->oauth2 || null === $this->oauth2->getAccessToken()) {
+            return null;
+        }
+
+        return $this->oauth2->getAccessToken()->toArray();
     }
 
     protected function getClient()
     {
-        static $client;
-
-        if (!$client) {
-            $defaults = array_merge(['verify' => false], $this->config, [
-                'headers' => [
-                    'Authorization' => 'Bearer '.$this->accessToken,
-                    // 'Content-type'  => 'application/json'
-                ]
-            ]);
-
-            $client = new GuzzleHttp\Client([
-                'base_url' => $this->url,
-                'defaults' => $defaults
-            ]);
+        if (null === $this->client) {
+            $this->client = $this->createClient();
         }
+
+        return $this->client;
+    }
+
+    protected function createClient()
+    {
+        $grantClient = new GuzzleHttp\Client([
+            'base_url' => $this->url.'token',
+            'defaults' => array_merge(['verify' => false], $this->config)
+        ]);
+
+        $client = new GuzzleHttp\Client([
+            'base_url' => $this->url,
+            'defaults' => array_merge(['verify' => false], $this->config, [
+                'auth' => 'oauth2',
+                'headers' => [
+                    'Content-type'  => 'application/json'
+                ]
+            ])
+        ]);
+
+        $grantType = $this->credentials ? new Password($grantClient, $this->credentials) : null;
+        $this->oauth2 = new Oauth2($grantType, new Refresh($grantClient));
+        if ($this->accessToken) {
+            $this->oauth2->setAccessToken(new AccessToken($this->accessToken, $this->refreshToken, $this->expiresAt));
+        }
+        $client->getEmitter()->attach($this->oauth2);
 
         return $client;
     }

@@ -6,7 +6,8 @@
         "symfony/console": "~2.5",
         "symfony/yaml": "~2.5",
         "symfony/property-access": "~2.5",
-        "guzzlehttp/guzzle": "~4.0"
+        "guzzlehttp/guzzle": "~4.0",
+        "pimple/pimple": "~3.0"
     },
     "require-dev": {
     },

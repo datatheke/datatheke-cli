@@ -33,11 +33,11 @@ class ConfigCommand extends AbstractBaseCommand
         $value = $input->getArgument('value');
 
         if (!$option && !$value) {
-            $output->writeln(Yaml::dump($this->config->getConfig()));
+            $output->writeln(Yaml::dump($this->container['config']->getConfig()));
 
             return;
         }
 
-        $this->config->set($option, $value);
+        $this->container['config']->set($option, $value);
     }
 }
