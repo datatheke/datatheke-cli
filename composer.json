@@ -4,6 +4,12 @@
     "keywords": ["datatheke"],
     "homepage": "https://github.com/datatheke/datatheke-cli",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Luc Vieillescazes",
+            "email": "luc@datatheke.com"
+        }
+    ],
     "require": {
         "php": ">=5.4",
         "datatheke/client": "~0.1",
