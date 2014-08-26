@@ -1,18 +1,18 @@
 {
     "name": "datatheke/datatheke-cli",
     "type": "library",
+    "keywords": ["datatheke"],
+    "homepage": "https://github.com/datatheke/datatheke-cli",
+    "license": "MIT",
     "require": {
         "php": ">=5.4",
+        "datatheke/client": "~0.1",
         "symfony/console": "~2.5",
         "symfony/yaml": "~2.5",
         "symfony/property-access": "~2.5",
-        "symfony/event-dispatcher": "~2.5",
-        "guzzlehttp/guzzle": "~4.0",
         "pimple/pimple": "~3.0"
     },
-    "require-dev": {
-    },
     "autoload": {
-        "psr-0": { "": "src/" }
+        "psr-0": { "Datatheke\\": "src/" }
     }
 }
