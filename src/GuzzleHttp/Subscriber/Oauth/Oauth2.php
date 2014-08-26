@@ -14,17 +14,22 @@ class Oauth2 implements SubscriberInterface
     /**
      * AccessToken
      */
-    private $accessToken;
+    protected $accessToken;
 
     /**
      * GrantTypeInterface
      */
-    private $grantType;
+    protected $grantType;
 
     /**
      * GrantTypeInterface
      */
-    private $refreshType;
+    protected $refreshType;
+
+    /**
+     *
+     */
+    protected $tokenUpdatedCallback;
 
     public function __construct(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshType = null)
     {
@@ -91,6 +96,15 @@ class Oauth2 implements SubscriberInterface
     public function setAccessToken(AccessToken $accessToken)
     {
         $this->accessToken = $accessToken;
+
+        if ($this->tokenUpdatedCallback) {
+            call_user_func($this->tokenUpdatedCallback, $accessToken);
+        }
+    }
+
+    public function setAccessTokenUpdatedCallback($callback)
+    {
+        $this->tokenUpdatedCallback = $callback;
     }
 
     /**
@@ -118,10 +132,10 @@ class Oauth2 implements SubscriberInterface
     protected function acquireAccessToken()
     {
         if (null === $this->grantType) {
-            throw new \Exception('Unable to request AccessToken without setting grantType in constructor');
+            throw new \Exception('Unable to acquire AccessToken without setting grantType in constructor');
         }
 
-        $this->accessToken = $this->grantType->getAccessToken($this->accessToken);
+        $this->setAccessToken($this->grantType->getAccessToken($this->accessToken));
     }
 
     protected function refreshToken()
@@ -130,6 +144,6 @@ class Oauth2 implements SubscriberInterface
             throw new \Exception('Unable to refresh AccessToken without setting refreshType in constructor');
         }
 
-        $this->accessToken = $this->refreshType->getAccessToken($this->accessToken);
+        $this->setAccessToken($this->refreshType->getAccessToken($this->accessToken));
     }
 }

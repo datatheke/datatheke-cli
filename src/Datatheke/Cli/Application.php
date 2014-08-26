@@ -19,7 +19,10 @@ class Application extends BaseApplication
 
     public function doRun(InputInterface $input, OutputInterface $output)
     {
-        $container = $this->getContainer();
+        $container = $this->createContainer();
+        $container['input'] = $input;
+        $container['output'] = $output;
+        $container['helper_set'] = $this->getHelperSet();
 
         foreach ($this->all() as $command) {
             if ($command instanceof ContainerAwareInterface) {
@@ -39,17 +42,20 @@ class Application extends BaseApplication
         return $commands;
     }
 
-    protected function getContainer()
+    protected function createContainer()
     {
-        static $container;
+        $container = new Container();
 
-        if (null === $container) {
-            $container = new Container();
-            $container['config_path'] = getenv('HOME').'/.datatheke';
-            $container['config'] = function ($c) {
-                return new Config($c['config_path']);
-            };
-        }
+        $container['config_path'] = getenv('HOME').'/.datatheke';
+        $container['config'] = function ($c) {
+            return new Config($c['config_path']);
+        };
+        $container['client_factory'] = function ($c) {
+            return new ClientFactory($c['config']);
+        };
+        $container['client'] = function ($c) {
+            return $c['client_factory']->createClient($c['input'], $c['output'], $c['helper_set']);
+        };
 
         return $container;
     }

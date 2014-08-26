@@ -1,6 +1,8 @@
 <?php
 
-namespace Datatheke\Component\Api;
+namespace Datatheke\Api;
+
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 use GuzzleHttp;
 use GuzzleHttp\Subscriber\Oauth\Oauth2;
@@ -18,11 +20,6 @@ class Client
     protected $client;
 
     /**
-     * GuzzleHttp\Subscriber\Oauth\Oauth2
-     */
-    protected $oauth2;
-
-    /**
      * Url of the datatheke instance (including trailing slash)
      */
     protected $url;
@@ -33,9 +30,10 @@ class Client
     protected $config;
 
     /**
-     * An array with username and password, or a callback wich returns username and password
+     * Credentials
      */
-    protected $credentials;
+    protected $username;
+    protected $password;
 
     /**
      * Token data
@@ -49,6 +47,7 @@ class Client
         $this->setTokenData($accessToken, $refreshToken, $expiresAt);
         $this->setUrl(self::DEFAULT_URL);
         $this->setConfig([]);
+        $this->dispatcher = new EventDispatcher();
     }
 
     public function setTokenData($accessToken, $refreshToken, $expiresAt)
@@ -68,24 +67,12 @@ class Client
         $this->config = $config;
     }
 
-    public function setCredentials($credentials)
+    public function setCredentials($username, $password)
     {
-        if (!is_array($credentials) && !is_callable($credentials)) {
-            throw new \Exception('Credentials must be an an array or callable');
-        }
-
-        $this->credentials = $credentials;
+        $this->username = $username;
+        $this->password = $password;
 
         return $this;
-    }
-
-    public function getLastToken()
-    {
-        if (null === $this->oauth2 || null === $this->oauth2->getAccessToken()) {
-            return null;
-        }
-
-        return $this->oauth2->getAccessToken()->toArray();
     }
 
     protected function getClient()
@@ -99,6 +86,8 @@ class Client
 
     protected function createClient()
     {
+        $dispatcher = $this->dispatcher;
+
         $grantClient = new GuzzleHttp\Client([
             'base_url' => $this->url.'token',
             'defaults' => array_merge(['verify' => false], $this->config)
@@ -114,14 +103,35 @@ class Client
             ])
         ]);
 
-        $grantType = $this->credentials ? new Password($grantClient, $this->credentials) : null;
-        $this->oauth2 = new Oauth2($grantType, new Refresh($grantClient));
-        if ($this->accessToken) {
-            $this->oauth2->setAccessToken(new AccessToken($this->accessToken, $this->refreshToken, $this->expiresAt));
+        if (null !== $this->username && null !== $this->password) {
+            $credentials = [$this->username, $this->password];
+        } else {
+            $credentials = function () use ($dispatcher) {
+                $event = new Event\CredentialsEvent();
+                $dispatcher->dispatch('datatheke_client.credentials', $event);
+
+                return $event->getCredentials();
+            };
         }
-        $client->getEmitter()->attach($this->oauth2);
+
+        $oauth2 = new Oauth2(new Password($grantClient, $credentials), new Refresh($grantClient));
+        if ($this->accessToken) {
+            $oauth2->setAccessToken(new AccessToken($this->accessToken, $this->refreshToken, $this->expiresAt));
+        }
+
+        $oauth2->setAccessTokenUpdatedCallback(function (AccessToken $accessToken) use ($dispatcher) {
+            $event = new Event\AccessTokenUpdatedEvent($accessToken);
+            $dispatcher->dispatch('datatheke_client.access_token_updated', $event);
+        });
+
+        $client->getEmitter()->attach($oauth2);
 
         return $client;
+    }
+
+    public function addListener($eventName, $listener)
+    {
+        $this->dispatcher->addListener($eventName, $listener);
     }
 
     public function getLibraries($page = 1)

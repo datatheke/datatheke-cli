@@ -32,7 +32,7 @@ class LibraryCommand extends AbstractBaseCommand
 
     protected function listLibraries(InputInterface $input, OutputInterface $output)
     {
-        $libraries = $this->getClient($input, $output)->getLibraries();
+        $libraries = $this->container['client']->getLibraries();
 
         foreach ($libraries['items'] as $library) {
             $output->writeln(sprintf('<info>[%s]</info> %s', $library['id'], $library['name']));
@@ -41,7 +41,7 @@ class LibraryCommand extends AbstractBaseCommand
 
     protected function listCollections(InputInterface $input, OutputInterface $output, $library)
     {
-        $collections = $this->getClient($input, $output)->getLibraryCollections($library);
+        $collections = $this->container['client']->getLibraryCollections($library);
 
         foreach ($collections['items'] as $collection) {
             $output->writeln(sprintf('<info>[%s]</info> %s', $collection['id'], $collection['name']));

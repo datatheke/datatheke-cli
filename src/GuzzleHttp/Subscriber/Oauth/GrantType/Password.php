@@ -11,6 +11,10 @@ class Password implements GrantTypeInterface
 
     public function __construct(ClientInterface $client, $credentials)
     {
+        if (!is_array($credentials) && !is_callable($credentials)) {
+            throw new \Exception('Credentials must be an an array or a callable');
+        }
+
         $this->client = $client;
         $this->credentials = $credentials;
     }
@@ -37,10 +41,6 @@ class Password implements GrantTypeInterface
             return $this->credentials;
         }
 
-        if (is_callable($this->credentials)) {
-            return call_user_func($this->credentials);
-        }
-
-        throw new \Exception('Credentials required');
+        return call_user_func($this->credentials);
     }
 }
