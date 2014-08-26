@@ -4,20 +4,20 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "d5df413ac229cbeb4c0c26e496ae3032",
+    "hash": "d2aa43860f7514b8838d1be2e6c172e9",
     "packages": [
         {
             "name": "datatheke/client",
-            "version": "v0.1.0",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/datatheke/datatheke-php-client.git",
-                "reference": "4a80732b5a6180aeb840f4ad641db216361f9780"
+                "reference": "ef881a4d4b5359748457f30a7b5bed861599be49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/datatheke/datatheke-php-client/zipball/4a80732b5a6180aeb840f4ad641db216361f9780",
-                "reference": "4a80732b5a6180aeb840f4ad641db216361f9780",
+                "url": "https://api.github.com/repos/datatheke/datatheke-php-client/zipball/ef881a4d4b5359748457f30a7b5bed861599be49",
+                "reference": "ef881a4d4b5359748457f30a7b5bed861599be49",
                 "shasum": ""
             },
             "require": {
@@ -46,7 +46,7 @@
             "keywords": [
                 "datatheke"
             ],
-            "time": "2014-08-26 12:00:25"
+            "time": "2014-08-26 14:58:13"
         },
         {
             "name": "guzzlehttp/guzzle",

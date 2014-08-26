@@ -38,6 +38,7 @@ class Application extends BaseApplication
         $commands = parent::getDefaultCommands();
         $commands[] = new Command\ConfigCommand();
         $commands[] = new Command\LibraryCommand();
+        $commands[] = new Command\CollectionCommand();
 
         return $commands;
     }
