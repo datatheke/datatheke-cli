@@ -37,18 +37,18 @@ class DeleteCommand extends AbstractBaseCommand
         }
     }
 
-    protected function deleteLibrary(InputInterface $input, OutputInterface $output, $library)
+    protected function deleteLibrary(InputInterface $input, OutputInterface $output, $libraryId)
     {
-        $this->container['client']->deleteLibrary($library);
+        $this->container['client']->deleteLibrary($libraryId);
     }
 
-    protected function deleteCollection(InputInterface $input, OutputInterface $output, $collection)
+    protected function deleteCollection(InputInterface $input, OutputInterface $output, $collectionId)
     {
-        $this->container['client']->deleteCollection($collection);
+        $this->container['client']->deleteCollection($collectionId);
     }
 
-    protected function deleteItem(InputInterface $input, OutputInterface $output, $collection, $item)
+    protected function deleteItem(InputInterface $input, OutputInterface $output, $collectionId, $itemId)
     {
-        $this->container['client']->deleteItem($collection, $item);
+        $this->container['client']->deleteItem($collectionId, $itemId);
     }
 }

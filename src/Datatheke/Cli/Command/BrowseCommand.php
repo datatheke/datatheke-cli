@@ -61,27 +61,27 @@ class BrowseCommand extends AbstractBaseCommand
         }
     }
 
-    protected function browseCollections(InputInterface $input, OutputInterface $output, $library, $page)
+    protected function browseCollections(InputInterface $input, OutputInterface $output, $libraryId, $page)
     {
-        $collections = $this->container['client']->getLibraryCollections($library, $page);
+        $collections = $this->container['client']->getLibraryCollections($libraryId, $page);
 
         foreach ($collections['items'] as $collection) {
             $output->writeln(sprintf('<info>[%s]</info> %s', $collection['id'], $collection['name']));
         }
     }
 
-    protected function browseItems(InputInterface $input, OutputInterface $output, $collection, $page)
+    protected function browseItems(InputInterface $input, OutputInterface $output, $collectionId, $page)
     {
-        $items = $this->container['client']->getCollectionItems($collection, $page);
+        $items = $this->container['client']->getCollectionItems($collectionId, $page);
 
         foreach ($items['items'] as $item) {
             $output->writeln(sprintf('<info>[%s]</info> %s', $item['id'], json_encode($item)));
         }
     }
 
-    protected function viewItem(InputInterface $input, OutputInterface $output, $collection, $item)
+    protected function viewItem(InputInterface $input, OutputInterface $output, $collectionId, $itemId)
     {
-        $item = $this->container['client']->getItem($collection, $item);
+        $item = $this->container['client']->getItem($collectionId, $itemId);
 
         $output->writeln(Yaml::dump($item));
     }

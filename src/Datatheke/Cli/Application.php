@@ -39,6 +39,7 @@ class Application extends BaseApplication
         $commands[] = new Command\ConfigCommand();
         $commands[] = new Command\BrowseCommand();
         $commands[] = new Command\CreateCommand();
+        $commands[] = new Command\UpdateCommand();
         $commands[] = new Command\DeleteCommand();
 
         return $commands;
@@ -56,7 +57,10 @@ class Application extends BaseApplication
             return new ClientFactory($c['config']);
         };
         $container['client'] = function ($c) {
-            return $c['client_factory']->createClient($c['input'], $c['output'], $c['helper_set']);
+            return $c['client_factory']->createClient($c['questioner']);
+        };
+        $container['questioner'] = function ($c) {
+            return new Questioner($c['input'], $c['output'], $c['helper_set']);
         };
 
         return $container;

@@ -5,7 +5,6 @@ namespace Datatheke\Cli\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\Question;
 
 class CreateCommand extends AbstractBaseCommand
 {
@@ -45,32 +44,28 @@ class CreateCommand extends AbstractBaseCommand
     {
         $output->writeln('<info>Creating library</info>');
 
-        $helper = $this->getHelperSet()->get('question');
-
-        $name = $helper->ask($input, $output, new Question('Name: '));
-        $description = $helper->ask($input, $output, new Question('Description: '));
+        $name = $this->container['questioner']->ask('Name');
+        $description = $this->container['questioner']->ask('Description');
 
         $id = $this->container['client']->createLibrary($name, $description);
         $output->writeln(sprintf('<info>%s</info>', $id));
     }
 
-    protected function createCollection(InputInterface $input, OutputInterface $output, $library)
+    protected function createCollection(InputInterface $input, OutputInterface $output, $libraryId)
     {
         $output->writeln('<info>Creating collection</info>');
 
-        $helper = $this->getHelperSet()->get('question');
-
-        $name = $helper->ask($input, $output, new Question('Name: '));
-        $description = $helper->ask($input, $output, new Question('Description: '));
+        $name = $this->container['questioner']->ask('Name');
+        $description = $this->container['questioner']->ask('Description');
 
         $fields = array();
         while (true) {
-            $label = $helper->ask($input, $output, new Question('Field label: '));
+            $label = $this->container['questioner']->ask('Field label');
             if (null === $label) {
                 break;
             }
 
-            $type = $helper->ask($input, $output, new Question('Field type: '));
+            $type = $this->container['questioner']->ask('Field type');
             $fields[] = ['label' => $label, 'type' => $type];
         }
 
@@ -78,25 +73,22 @@ class CreateCommand extends AbstractBaseCommand
             throw new \Exception('At least one field is required');
         }
 
-        $id = $this->container['client']->createCollection($library, $name, $description, $fields);
+        $id = $this->container['client']->createCollection($libraryId, $name, $description, $fields);
         $output->writeln(sprintf('<info>%s</info>', $id));
     }
 
-    protected function createItem(InputInterface $input, OutputInterface $output, $collection)
+    protected function createItem(InputInterface $input, OutputInterface $output, $collectionId)
     {
         $output->writeln('<info>Creating item</info>');
 
-        $helper = $this->getHelperSet()->get('question');
-
-        $definition = $this->container['client']->getCollection($collection);
+        $definition = $this->container['client']->getCollection($collectionId);
         $values = array();
         foreach ($definition['fields'] as $field) {
-            $value = $helper->ask($input, $output, new Question(sprintf('%s (%s): ', $field['label'], $field['type'])));
-
+            $value = $this->container['questioner']->ask(sprintf('%s <info>(%s)</info>', $field['label'], $field['type']));
             $values['_'.$field['id']] = $value;
         }
 
-        $id = $this->container['client']->createItem($collection, $values);
+        $id = $this->container['client']->createItem($collectionId, $values);
         $output->writeln(sprintf('<info>%s</info>', $id));
     }
 }

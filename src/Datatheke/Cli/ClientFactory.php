@@ -2,11 +2,6 @@
 
 namespace Datatheke\Cli;
 
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\HelperSet;
-use Symfony\Component\Console\Question\Question;
-
 use Datatheke\Api\Client;
 use Datatheke\Api\Event\CredentialsEvent;
 use Datatheke\Api\Event\AccessTokenUpdatedEvent;
@@ -20,19 +15,13 @@ class ClientFactory
         $this->config = $config;
     }
 
-    public function createClient(InputInterface $input, OutputInterface $output, HelperSet $helperSet)
+    public function createClient(Questioner $questioner)
     {
-        $helper = $helperSet->get('question');
         $config = $this->config;
 
-        $getCredentials = function (CredentialsEvent $event) use ($input, $output, $helper) {
-            $question = new Question('Username: ');
-            $username = $helper->ask($input, $output, $question);
-
-            $question = new Question('Password: ');
-            $question->setHidden(true);
-            $question->setHiddenFallback(false);
-            $password = $helper->ask($input, $output, $question);
+        $getCredentials = function (CredentialsEvent $event) use ($questioner) {
+            $username = $questioner->ask('Username');
+            $password = $questioner->ask('Password', null, true, false);
 
             $event->setCredentials($username, $password);
         };
