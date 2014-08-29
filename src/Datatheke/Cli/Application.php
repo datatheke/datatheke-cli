@@ -37,8 +37,9 @@ class Application extends BaseApplication
     {
         $commands = parent::getDefaultCommands();
         $commands[] = new Command\ConfigCommand();
-        $commands[] = new Command\LibraryCommand();
-        $commands[] = new Command\CollectionCommand();
+        $commands[] = new Command\BrowseCommand();
+        $commands[] = new Command\CreateCommand();
+        $commands[] = new Command\DeleteCommand();
 
         return $commands;
     }
