@@ -6,6 +6,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class Questioner
 {
@@ -37,6 +38,15 @@ class Questioner
         if (null !== $hiddenFallback) {
             $question->setHiddenFallback($hiddenFallback);
         }
+
+        return $helper->ask($this->input, $this->output, $question);
+    }
+
+    public function askConfirmation($label, $default = true)
+    {
+        $helper = $this->helperSet->get('question');
+
+        $question = new ConfirmationQuestion(sprintf('<question>%s</question> (<comment>%s</comment>): ', $label, $default ? 'yes' : 'no'), $default);
 
         return $helper->ask($this->input, $this->output, $question);
     }

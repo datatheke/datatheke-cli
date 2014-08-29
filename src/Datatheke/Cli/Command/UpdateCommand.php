@@ -44,8 +44,14 @@ class UpdateCommand extends AbstractBaseCommand
 
         $name = $this->container['questioner']->ask('Name', $library['name']);
         $description = $this->container['questioner']->ask('Description', $library['description']);
+        $public = $this->container['questioner']->askConfirmation('public', !$library['private']);
+        if ($public) {
+            $collaborative = $this->container['questioner']->askConfirmation('collaborative', $library['collaborative']);
+        } else {
+            $collaborative = false;
+        }
 
-        $this->container['client']->updateLibrary($library['id'], $name, $description);
+        $this->container['client']->updateLibrary($library['id'], $name, $description, $public, $collaborative);
     }
 
     protected function updateCollection(InputInterface $input, OutputInterface $output, $collectionId)

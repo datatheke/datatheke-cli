@@ -46,8 +46,14 @@ class CreateCommand extends AbstractBaseCommand
 
         $name = $this->container['questioner']->ask('Name');
         $description = $this->container['questioner']->ask('Description');
+        $public = $this->container['questioner']->askConfirmation('public', false);
+        if ($public) {
+            $collaborative = $this->container['questioner']->askConfirmation('collaborative', false);
+        } else {
+            $collaborative = false;
+        }
 
-        $id = $this->container['client']->createLibrary($name, $description);
+        $id = $this->container['client']->createLibrary($name, $description, $public, $collaborative);
         $output->writeln(sprintf('<info>%s</info>', $id));
     }
 
